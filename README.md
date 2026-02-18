@@ -1,106 +1,227 @@
-# New Nx Repository
+# Chatbot PDF z RAG i Ollama
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+🤖 **Inteligentny chatbot oparty na dokumentach PDF z wykorzystaniem technologii RAG i Ollama**
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/js?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
-## Finish your Nx platform setup
+Projekt wykorzystuje architekturę Retrieval-Augmented Generation (RAG) do tworzenia chatbota, który może rozmawiać wyłącznie na podstawie instrukcji zawartych w dokumentach PDF użytkownika. System integruje lokalny model językowy Ollama przez API.
+## 🚀 Funkcjonalności
 
-🚀 [Finish setting up your workspace](https://cloud.nx.app/connect/WFjB4hAptS) to get faster builds with remote caching, distributed task execution, and self-healing CI. [Learn more about Nx Cloud](https://nx.dev/ci/intro/why-nx-cloud).
-## Generate a library
+- 📄 **Przetwarzanie dokumentów PDF** - Automatyczne ekstrakcję tekstu z plików PDF
+- 🧠 **Retrieval-Augmented Generation (RAG)** - Inteligentne wyszukiwanie i generowanie odpowiedzi na podstawie kontekstu
+- 🤖 **Integracja z Ollama** - Wykorzystanie lokalnych modeli językowych przez API
+- 🔒 **Izolacja kontekstu** - Chatbot rozmawia wyłącznie na podstawie załadowanych dokumentów
+- 💾 **Baza danych wektorowa** - Przechowywanie embeddingów dla efektywnego wyszukiwania
+- 🌐 **Nowoczesny interfejs webowy** - Angular z Material Design
+- ⚡ **Mikrousługi** - Backend oparty na NestJS z separacją odpowiedzialności
 
-```sh
-npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
+## 🏗️ Architektura
+
+### Komponenty systemu:
+
+1. **Frontend (Angular)** - Interfejs użytkownika do zarządzania dokumentami i prowadzenia rozmów
+2. **Backend API (NestJS)** - REST API obsługujące logikę biznesową
+3. **Vector Database** - ChromaDB / Pinecone do przechowywania embeddingów
+4. **PDF Processor** - Ekstrakcja tekstu z dokumentów PDF
+5. **RAG Engine** - System wyszukiwania i generowania odpowiedzi
+6. **Ollama API** - Lokalny model językowy
+
+## 🛠️ Technologie
+
+- **Frontend**: Angular 21, Angular Material, RxJS
+- **Backend**: NestJS, TypeScript, Express
+- **AI/ML**: Ollama, LangChain, ChromaDB
+- **Baza danych**: PostgreSQL + wektorowa baza danych
+- **Build Tool**: Nx Workspace
+- **Testing**: Vitest, Jest
+
+## 📦 Instalacja i uruchomienie
+
+### Wymagania wstępne
+
+- Node.js 20+
+- npm lub yarn
+- Ollama zainstalowany lokalnie
+- PostgreSQL
+
+### 1. Klonowanie repozytorium
+
+```bash
+git clone <repository-url>
+cd chat-bot-pdf
 ```
 
-## Run tasks
+### 2. Instalacja zależności
 
-To build the library use:
-
-```sh
-npx nx build pkg1
+```bash
+npm install
 ```
 
-To run any task with Nx use:
+### 3. Uruchomienie Ollama
 
-```sh
-npx nx <target> <project-name>
+```bash
+# Zainstaluj model (np. llama2)
+ollama pull llama2
+
+# Uruchom serwer Ollama
+ollama serve
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### 4. Konfiguracja bazy danych
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```bash
+# Utwórz bazę danych PostgreSQL
+createdb chat_bot_pdf
 
-## Versioning and releasing
-
-To version and release the library use
-
-```
-npx nx release
-```
-
-Pass `--dry-run` to see what would happen without actually releasing the library.
-
-[Learn more about Nx release &raquo;](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Keep TypeScript project references up to date
-
-Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
-
-To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
-
-```sh
-npx nx sync
+# Skonfiguruj połączenie w pliku .env
+cp .env.example .env
+# Edytuj .env z właściwymi danymi bazy
 ```
 
-You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
+### 5. Uruchomienie aplikacji
 
-```sh
-npx nx sync:check
+```bash
+# Uruchom backend API
+npx nx serve api
+
+# Uruchom frontend (w nowym terminalu)
+npx nx serve web
 ```
 
-[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+Aplikacja będzie dostępna pod:
+- Frontend: http://localhost:4200
+- Backend API: http://localhost:3000
 
-## Nx Cloud
+## 🔧 Konfiguracja
 
-Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+### Zmienne środowiskowe (.env)
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```env
+# Baza danych
+DATABASE_URL=postgresql://user:password@localhost:5432/chat_bot_pdf
 
-### Set up CI (non-Github Actions CI)
+# Ollama
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama2
 
-**Note:** This is only required if your CI provider is not GitHub Actions.
+# Vector Database
+VECTOR_DB_URL=http://localhost:8000
 
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
+# JWT
+JWT_SECRET=your-secret-key
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 📚 Użycie
 
-## Install Nx Console
+### 1. Dodawanie dokumentów PDF
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+1. Przejdź do zakładki "Dokumenty"
+2. Kliknij "Dodaj dokument"
+3. Wybierz plik PDF z instrukcjami
+4. Poczekaj na przetworzenie dokumentu
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### 2. Rozmowa z chatbotem
 
-## Useful links
+1. Przejdź do zakładki "Chat"
+2. Wybierz dokument kontekstowy
+3. Zadaj pytanie dotyczące instrukcji z dokumentu
+4. Chatbot odpowie wyłącznie na podstawie załadowanych dokumentów
 
-Learn more:
+## 🧪 Testowanie
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/js?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```bash
+# Uruchom testy jednostkowe
+npx nx test
 
-And join the Nx community:
+# Uruchom testy e2e
+npx nx e2e api-e2e
 
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+# Uruchom wszystkie testy
+npx nx run-many --target=test
+```
+
+## 🚀 Wdrożenie
+
+### Development
+
+```bash
+npx nx build
+```
+
+### Production
+
+```bash
+# Build wszystkich aplikacji
+npx nx run-many --target=build --configuration=production
+
+# Uruchomienie w trybie produkcyjnym
+npx nx serve api --configuration=production
+npx nx serve web --configuration=production
+```
+
+## 📁 Struktura projektu
+
+```
+chat-bot-pdf/
+├── api/                    # Backend NestJS
+│   ├── src/
+│   │   ├── modules/
+│   │   │   ├── chat/       # Moduł chat
+│   │   │   ├── documents/  # Moduł dokumentów
+│   │   │   └── rag/        # Moduł RAG
+│   │   └── main.ts
+│   └── project.json
+├── web/                    # Frontend Angular
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── components/
+│   │   │   ├── services/
+│   │   │   └── pages/
+│   │   └── main.ts
+│   └── project.json
+├── api-e2e/               # Testy e2e
+├── packages/              # Wspólne biblioteki
+└── nx.json               # Konfiguracja Nx
+```
+
+## 🔧 Rozwój
+
+### Dodawanie nowych funkcji
+
+```bash
+# Generowanie nowego modułu w API
+npx nx g @nx/nest:module modules/new-feature --project=api
+
+# Generowanie komponentu w Angular
+npx nx g @nx/angular:component components/new-component --project=web
+```
+
+### Debugowanie
+
+```bash
+# Uruchomienie z debugowaniem
+npx nx serve api --inspect
+
+# Podgląd grafu zależności
+npx nx graph
+```
+
+## 🤝 Przyczynianie się
+
+1. Fork projektu
+2. Utwórz branch dla nowej funkcji (`git checkout -b feature/nazwa-funkcji`)
+3. Zacommituj zmiany (`git commit -am 'Dodaj nową funkcję'`)
+4. Wypchnij branch (`git push origin feature/nazwa-funkcji`)
+5. Utwórz Pull Request
+
+## 📄 Licencja
+
+Ten projekt jest licencjonowany na warunkach MIT - zobacz plik [LICENSE](LICENSE) dla szczegółów.
+
+## 📞 Kontakt
+
+Jeśli masz pytania lub potrzebujesz pomocy, śmiało napisz!
+
+---
+
+*Powered by Nx, Angular, NestJS, Ollama i RAG*
