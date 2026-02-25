@@ -131,6 +131,63 @@ $transition: 0.2s ease;
   }
 }
 
+.btn-upload {
+  margin: 0 10px 6px;
+  padding: 9px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed $color-border;
+  border-radius: 10px;
+  color: $color-muted;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background $transition, border-color $transition, color $transition;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: $color-accent;
+    color: $color-text;
+  }
+
+  &.uploading {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.upload-status {
+  margin: 0 10px 6px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #6ee7b7;
+  background: rgba(110, 231, 183, 0.08);
+  border: 1px solid rgba(110, 231, 183, 0.2);
+  word-break: break-all;
+
+  &--error {
+    color: #fca5a5;
+    background: rgba(252, 165, 165, 0.08);
+    border-color: rgba(252, 165, 165, 0.2);
+  }
+}
+
+.spinner-sm {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: $color-accent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
 // ── Conversation list ─────────────────────────────────
 .conversation-list {
   flex: 1;

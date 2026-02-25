@@ -15,6 +15,7 @@ export const RAG_CONFIG = {
   },
   retrieval: {
     topK: 5,              // ile chunków pobieramy przy query
-    scoreThreshold: 0.5,  // minimalne podobieństwo
+    scoreThreshold: 0.6,  // minimalne podobieństwo (raised to reduce off-topic matches)
+    minTopScore: 0.6,     // jeśli najlepszy wynik < minTopScore → pytanie nie dotyczy dokumentu
   },
 };

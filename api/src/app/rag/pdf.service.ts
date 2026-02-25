@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RAG_CONFIG } from './rag.config';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require('pdf-parse');
+const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string }>;
 
 export interface DocumentChunk {
   content: string;
@@ -10,8 +10,8 @@ export interface DocumentChunk {
     chunkIndex: number;
     totalChunks?: number;
   };
-}
-
+}  
+ 
 @Injectable()
 export class PdfService {
   private readonly logger = new Logger(PdfService.name);

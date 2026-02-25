@@ -59,8 +59,13 @@ export class RagService {
     // 2. Znajdź najlepsze chunki
     const relevantChunks: SearchResult[] = await this.qdrantService.search(queryEmbedding);
 
-    if (relevantChunks.length === 0) {
-      res.write('data: Nie znalazłem odpowiednich informacji w dokumentach.\n\n');
+    const topScore = relevantChunks.length > 0 ? relevantChunks[0].score : 0;
+
+    if (relevantChunks.length === 0 || topScore < RAG_CONFIG.retrieval.minTopScore) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.write('data: Pytanie nie dotyczy dokumentu\n\n');
       res.end();
       return;
     }
@@ -74,9 +79,12 @@ export class RagService {
     const messages: ChatMessage[] = [
       {
         role: 'system',
-        content: `Jesteś pomocnym asystentem. Odpowiadaj wyłącznie na podstawie poniższego kontekstu z dokumentów. 
-Jeśli odpowiedź nie jest zawarta w kontekście, powiedz wprost że nie masz tej informacji.
-Odpowiadaj w języku pytania użytkownika.
+        content: `Jesteś asystentem odpowiadającym WYŁĄCZNIE na podstawie poniższego kontekstu z dokumentu PDF.
+ZASADY (bezwzględnie obowiązujące):
+1. Odpowiadaj TYLKO na pytania dotyczące treści zawartej w poniższym KONTEKŚCIE.
+2. Jeśli pytanie nie dotyczy dokumentu lub kontekst nie zawiera odpowiedzi, odpowiedz DOKŁADNIE: "Pytanie nie dotyczy dokumentu" — bez żadnych dodatkowych słów.
+3. Nie korzystaj z własnej wiedzy ani domysłów.
+4. Odpowiadaj w języku pytania użytkownika.
 
 KONTEKST:
 ${context}`,

@@ -12,6 +12,8 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MessageFormatPipe } from './message-format.pipe';
 
+const API_BASE = 'http://localhost:3000/api/rag';
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -51,6 +53,8 @@ export class ChatComponent implements AfterViewChecked {
   userInput = signal<string>('');
   isSidebarOpen = signal<boolean>(true);
   isTyping = signal<boolean>(false);
+  isUploading = signal<boolean>(false);
+  uploadStatus = signal<{ type: 'success' | 'error'; text: string } | null>(null);
   private shouldScrollToBottom = false;
 
   // ── Derived ────────────────────────────────────────────────────────────────
@@ -171,51 +175,111 @@ export class ChatComponent implements AfterViewChecked {
     };
     this.addMessageToConversation(convId, loadingMsg);
 
-    // TODO: Implementacja - wysyłanie wiadomości do API i odbieranie odpowiedzi
-    // Przykład:
-    // this.http.post<{ reply: string }>('/api/chat', { message: text }).subscribe({
-    //   next: (response) => this.handleAssistantResponse(convId, loadingMsg.id, response.reply),
-    //   error: (err) => this.handleError(convId, loadingMsg.id, err),
-    // });
-
-    // Symulacja odpowiedzi (placeholder - do zastąpienia przez prawdziwe API)
-    this.simulatePlaceholderResponse(convId, loadingMsg.id, text);
+    this.callRagApi(convId, loadingMsg.id, text);
   }
 
-  // TODO: Implementacja - obsługa odpowiedzi z API
-  private handleAssistantResponse(
-    convId: string,
-    loadingMsgId: string,
-    reply: string
-  ): void {
-    this.replaceLoadingMessage(convId, loadingMsgId, reply);
-    this.isTyping.set(false);
-    this.shouldScrollToBottom = true;
+  // ── RAG API ────────────────────────────────────────────────────────────────
+
+  private async callRagApi(convId: string, loadingMsgId: string, question: string): Promise<void> {
+    // Zbuduj historię (bez aktualnego pytania i loading message)
+    const history = this.conversations()
+      .find((c) => c.id === convId)
+      ?.messages
+      .filter((m) => !m.loading && m.id !== loadingMsgId)
+      .slice(0, -1) // pomiń ostatnią user message (wysyłamy jako question)
+      .map((m) => ({ role: m.role, content: m.content })) ?? [];
+
+    try {
+      const response = await fetch(`${API_BASE}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, history }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = '';
+
+      // Oznacz że odpowiedź już nie jest w loading
+      this.replaceLoadingMessage(convId, loadingMsgId, '');
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const raw = decoder.decode(value, { stream: true });
+        const lines = raw.split('\n');
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const payload = line.slice(6).trim();
+          if (payload === '[DONE]') break;
+
+          try {
+            const { text } = JSON.parse(payload) as { text: string };
+            accumulated += text;
+            this.replaceLoadingMessage(convId, loadingMsgId, accumulated);
+            this.shouldScrollToBottom = true;
+          } catch {
+            // ignoruj nieparsowalne linie
+          }
+        }
+      }
+    } catch (err) {
+      console.error('RAG API error:', err);
+      this.replaceLoadingMessage(
+        convId,
+        loadingMsgId,
+        'Wystąpił błąd podczas komunikacji z serwerem. Upewnij się że backend (`nx serve api`) i Ollama działają.'
+      );
+    } finally {
+      this.isTyping.set(false);
+      this.shouldScrollToBottom = true;
+    }
   }
 
-  // TODO: Implementacja - obsługa błędów z API
-  private handleError(convId: string, loadingMsgId: string, err: unknown): void {
-    console.error('Chat API error:', err);
-    this.replaceLoadingMessage(
-      convId,
-      loadingMsgId,
-      'Wystąpił błąd podczas komunikacji z serwerem. Spróbuj ponownie.'
-    );
-    this.isTyping.set(false);
-    this.shouldScrollToBottom = true;
+  // ── PDF Upload ─────────────────────────────────────────────────────────────
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.uploadPdf(file);
+    input.value = ''; // reset input
   }
 
-  /** Tymczasowa symulacja - do usunięcia po wdrożeniu prawdziwego API */
-  private simulatePlaceholderResponse(
-    convId: string,
-    loadingMsgId: string,
-    _userText: string
-  ): void {
-    setTimeout(() => {
-      const placeholder =
-        '⚙️ *To jest odpowiedź zastępcza.* \n\nPrawdziwa implementacja czeka na podłączenie do API — szukaj znacznika `// TODO: Implementacja` w pliku `chat.component.ts`.';
-      this.handleAssistantResponse(convId, loadingMsgId, placeholder);
-    }, 1200);
+  private uploadPdf(file: File): void {
+    this.isUploading.set(true);
+    this.uploadStatus.set(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.http.post<{ message: string; chunksIngested: number }>(
+      `${API_BASE}/upload`,
+      formData
+    ).subscribe({
+      next: (res) => {
+        this.isUploading.set(false);
+        this.uploadStatus.set({
+          type: 'success',
+          text: `✓ ${file.name} (${res.chunksIngested} fragmentów)`,
+        });
+        setTimeout(() => this.uploadStatus.set(null), 4000);
+      },
+      error: (err) => {
+        this.isUploading.set(false);
+        this.uploadStatus.set({
+          type: 'error',
+          text: `✗ Błąd uploadu: ${err.message ?? 'nieznany błąd'}`,
+        });
+        setTimeout(() => this.uploadStatus.set(null), 5000);
+      },
+    });
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────

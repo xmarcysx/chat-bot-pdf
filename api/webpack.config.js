@@ -9,6 +9,13 @@ module.exports = {
       devtoolModuleFilenameTemplate: '[absolute-resource-path]',
     }),
   },
+  externals: [
+    // pdf-parse używa dynamicznych require i fs - nie bundluj
+    ({ request }, callback) => {
+      if (request === 'pdf-parse') return callback(null, `commonjs ${request}`);
+      callback();
+    },
+  ],
   plugins: [
     new NxAppWebpackPlugin({
       target: 'node',
